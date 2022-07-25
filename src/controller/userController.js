@@ -5,10 +5,12 @@ const {isValidRequest,
        isValidMail,
        isValidPhone,
        isValidPassword,
-       isValidPincode} = require('../validator/userValidation')
+       isValidPincode,
+       isValidId} = require('../validator/userValidation')
 const bcrypt = require('bcrypt')
 const jwt = require('jsonwebtoken')
 const {uploadFiles} = require('../upload/upload')
+const mongoose = require('mongoose')
 
 const createUser = async function(req, res){
     try{
@@ -63,6 +65,13 @@ const createUser = async function(req, res){
 
         //Profile Image validation
         if(profileImage.length > 0){
+            console.log(profileImage[0].originalname)
+           let match = /\.(jpeg|png|jpg)$/.test(profileImage[0].originalname)
+           if(match == false){
+            return res
+                .status(400)
+                .send({status: false, message:"Profile Image is required in JPEG/PNG/JPG format"})
+           }
             let uploadedFileURL = await uploadFiles(profileImage[0]) 
             console.log(uploadedFileURL)
             req.body.profileImage = uploadedFileURL
@@ -301,7 +310,7 @@ const loginUser = async function(req, res){
         {
           userId: user._id.toString(),
         },
-        "book-management36",
+        "productManagement/13/dfis",
         {expiresIn: "24h"}
       );
       res.header("x-api-key", token);
@@ -317,6 +326,25 @@ const loginUser = async function(req, res){
     }
 }
 
-
+const getUser = async function(req, res){
+    try{
+        const userFound = await userModel.findOne({_id: req.user._id})
+        if(!userFound){
+            return res
+                .status(404)
+                .send({status: false, message:"No userFound"})
+        }
+        return res
+            .status(200)
+            .send({status: true, message:"User profile details", data: userFound})
+    }
+    catch(error){
+        console.log(error)
+        return res
+                .status(500)
+                .send({status: false, message: error.message})
+    }
+}
 module.exports = {createUser,
-                  loginUser}
+                  loginUser,
+                    getUser}

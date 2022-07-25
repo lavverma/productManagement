@@ -1,9 +1,11 @@
 const express = require('express')
-const {createUser, loginUser} = require('../controller/userController')
+const {createUser, loginUser, getUser} = require('../controller/userController')
+const {authentication, authorization} = require('../middleware/auth')
 const router = express.Router()
 
 router.post('/register', createUser)
 router.post('/login', loginUser)
+router.get('/user/:userId/profile', authentication, authorization, getUser )
 
 //Validating the endpoint
 router.all("/*", function (req, res) {

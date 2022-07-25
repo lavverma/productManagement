@@ -1,3 +1,5 @@
+const mongoose = require('mongoose')
+
 //validation for empty request body
 const isValidRequest = function(data){
     if(Object.keys(data).length == 0){
@@ -36,6 +38,12 @@ const isValidPassword = function (pass) {
     return /^[1-9][0-9]{5}$/.test(pin)
 };
 
+const isValidId = function(id){
+    if(!mongoose.Types.ObjectId.isValid(id)){
+     return false
+    }return true
+ }
+ 
 
 module.exports = {  isValidRequest,
                     isValidString,
@@ -43,4 +51,5 @@ module.exports = {  isValidRequest,
                     isValidMail,
                     isValidPhone,
                     isValidPassword,
-                    isValidPincode}
+                    isValidPincode,
+                    isValidId}
