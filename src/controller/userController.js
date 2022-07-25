@@ -6,7 +6,7 @@ const {isValidRequest,
        isValidPhone,
        isValidPassword,
        isValidPincode} = require('../validator/userValidation')
-const {bcrypt} = require('bcrypt')
+const bcrypt = require('bcrypt')
 const {jwt} = require('jsonwebtoken')
 const {uploadFiles} = require('../upload/upload')
 
