@@ -7,7 +7,7 @@ const {isValidRequest,
        isValidPassword,
        isValidPincode} = require('../validator/userValidation')
 const bcrypt = require('bcrypt')
-const {jwt} = require('jsonwebtoken')
+const jwt = require('jsonwebtoken')
 const {uploadFiles} = require('../upload/upload')
 
 const createUser = async function(req, res){
@@ -19,7 +19,6 @@ const createUser = async function(req, res){
         }
         let {fname, lname, email, phone, password, address} = req.body;
         let profileImage = req.files
-        let userData = {}
         if(!fname){
             return res
                 .status(400)
@@ -31,7 +30,6 @@ const createUser = async function(req, res){
                 .status(400)
                 .send({status: false, message:"Enter first name in proper format"}) 
         }
-        userData.fname = fname;
 
         if(!lname){
             return res
@@ -44,7 +42,6 @@ const createUser = async function(req, res){
                 .status(400)
                 .send({status: false, message:"Enter Last name in proper format"}) 
         }
-        userData.lname = lname
 
         if(!email){
             return res
@@ -63,14 +60,12 @@ const createUser = async function(req, res){
                 .status(409)
                 .send({status: false, message:`${email} emailId already in use`}) 
         }
-        userData.email = email
 
         //Profile Image validation
         if(profileImage.length > 0){
             let uploadedFileURL = await uploadFiles(profileImage[0]) 
             console.log(uploadedFileURL)
             req.body.profileImage = uploadedFileURL
-            console.log(userData)
         }
         else{
             return res
@@ -111,10 +106,8 @@ const createUser = async function(req, res){
                 if(userPhone[0].phone.startsWith(phone, 0)== true){
                     return res.status(409).send({status:false, message:`${phone} phone number is already in use`})
                 }
-                userData.phone = phone
-            }else userData.phone = phone
             }
-        
+        }
         //incase phone number is starting from 0 in body  
         if(phone.startsWith("0",0)== true){
             if(userPhone.length > 0){
@@ -134,10 +127,8 @@ const createUser = async function(req, res){
                 if(userPhone[0].phone.startsWith(phone, 0)== true){
                     return res.status(409).send({status:false, message:`${phone} phone number is already in use`})
                 }
-                userData.phone = phone
             }
-             else userData.phone = phone
-            }
+        }
         
         //incase there is just the phone number without prefix 
         if(phone){
@@ -157,8 +148,7 @@ const createUser = async function(req, res){
                 if(userPhone[0].phone.startsWith(phone, 0)== true){
                     return res.status(409).send({status:false, message:`${phone} phone number is already in use`})
                 }
-            userData.phone = phone
-            }else userData.phone = phone
+            }
         }
         
         //Password validation
@@ -246,9 +236,9 @@ const createUser = async function(req, res){
         const user = await userModel.create(req.body)
         return res  
                 .status(201)
-                .send({status: true, message:"success", data:user})
+                .send({status: true, message:"User created successfully", data:user})
     }
-
+        
     catch(error){
         console.log(error)
         return res
@@ -257,7 +247,7 @@ const createUser = async function(req, res){
     }
 }
 
-const login = async function(req, res){
+const loginUser = async function(req, res){
     try{
        
       if (!isValidRequest(req.body)) {
@@ -268,49 +258,56 @@ const login = async function(req, res){
       let {email, password} = req.body;   
   
       // validating the email
-      if(email){
-        if (!isValidMail(email))
+      if(!email){
           return res
             .status(400)
+            .send({ status: false, message: "email is required" });
+      }
+      if (!isValidMail(email)){
+        return res
+            .status(400)
             .send({ status: false, message: "Entered mail ID is not valid" });
-      }else return res
-                .status(400)
-                .send({ status: false, message: "email is required" });
+      }
 
       // validating the password
-      if(password){
-        if (!isValidPassword(password))
-          return res.status(400).send({
-            status: false,
-            message: "Passwrod is not valid",
-          });
-      }else return res
+      if(!password){
+        return res
                 .status(400)
                 .send({ status: false, message: "password is required" });
-  
-      // finding for the user with email and password
+      }
+      if (!isValidPassword(password))
+          return res
+                .status(400)
+                .send({status: false, message: "Entered Passwrod is not valid"});
+
       let user = await userModel.findOne({
-        email: email,
-        password: password,
+            email: email,
       });
-      if (!user)
+
+    if (!user)
         return res.status(400).send({
           status: false,
-          message: "Username and password are not matched",
-        });
-  
+          message: "Email does not exist",
+    });
+      const match = await bcrypt.compare(password, user.password);
+      if(!match){
+        return res
+                .status(400)
+                .send({status: false, message: "Entered Passwrod is incorrect"});
+      }  
+
       // JWT creation
       let token = jwt.sign(
         {
           userId: user._id.toString(),
-          expiresIn: "24h"
         },
-        "book-management36"
+        "book-management36",
+        {expiresIn: "24h"}
       );
       res.header("x-api-key", token);
       return res
         .status(200)
-        .send({ status: true, message: "Success", data: token });
+        .send({ status: true, message: "User login successfull", data: {userId: user._id, token: token} });
     }
     catch(error){
         console.log(error)
@@ -319,4 +316,7 @@ const login = async function(req, res){
                 .send({status: false, message: error.message})
     }
 }
-module.exports = {createUser}
+
+
+module.exports = {createUser,
+                  loginUser}
