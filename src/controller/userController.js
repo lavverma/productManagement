@@ -20,6 +20,7 @@ const createUser = async function(req, res){
                 .send({status: false, message:"Enter valid Input"}) 
         }
         let {fname, lname, email, phone, password, address} = req.body;
+        let userData = {}
         let profileImage = req.files
         if(!fname){
             return res
@@ -32,6 +33,7 @@ const createUser = async function(req, res){
                 .status(400)
                 .send({status: false, message:"Enter first name in proper format"}) 
         }
+        userData.fname = fname
 
         if(!lname){
             return res
@@ -44,6 +46,7 @@ const createUser = async function(req, res){
                 .status(400)
                 .send({status: false, message:"Enter Last name in proper format"}) 
         }
+        userData.lname = lname
 
         if(!email){
             return res
@@ -62,6 +65,7 @@ const createUser = async function(req, res){
                 .status(409)
                 .send({status: false, message:`${email} emailId already in use`}) 
         }
+        userData.email = email
 
         //Profile Image validation
         if(profileImage.length > 0){
@@ -74,7 +78,7 @@ const createUser = async function(req, res){
            }
             let uploadedFileURL = await uploadFiles(profileImage[0]) 
             console.log(uploadedFileURL)
-            req.body.profileImage = uploadedFileURL
+            userData.profileImage = uploadedFileURL
         }
         else{
             return res
@@ -96,68 +100,73 @@ const createUser = async function(req, res){
         }
         let userPhone = await userModel.find()
         phone = phone.toString()
-        //incase phone number is starting from +91 in body
-        if(phone.startsWith("+91",0)== true){   
-            phone = phone.substring(4,14)
-            if(userPhone.length >0){
-                if(userPhone[0].phone.startsWith("+91")){
-                    if(userPhone[0].phone.startsWith(phone, 4)== true){
+        
+         //incase phone number is starting from +91 in body
+         if(phone.startsWith("+91",0)== true){   
+            let newPhone = phone.substring(4,14)
+            for(i=0; i<userPhone.length; i++){
+                if(userPhone[i].phone.startsWith("+91")){
+                    if(userPhone[i].phone.startsWith(newPhone, 4)== true){
                         return res.status(409).send({status:false, message:`${phone} phone number is already in use`})
                     }
                 }
     
-                if(userPhone[0].phone.startsWith(0)){
-                    if(userPhone[0].phone.startsWith(phone, 1)== true){
+                if(userPhone[i].phone.startsWith(0)){
+                    if(userPhone[i].phone.startsWith(newPhone, 1)== true){
                         return res.status(409).send({status:false, message:`${phone} phone number is already in use`})
                     }
                 }
     
-                if(userPhone[0].phone.startsWith(phone, 0)== true){
+                if(userPhone[i].phone.startsWith(newPhone, 0)== true){
                     return res.status(409).send({status:false, message:`${phone} phone number is already in use`})
                 }
             }
+            userData.phone = phone
         }
+    
         //incase phone number is starting from 0 in body  
         if(phone.startsWith("0",0)== true){
-            if(userPhone.length > 0){
-            phone = phone.substring(1,12)
-                if(userPhone[0].phone.startsWith("+91")){
-                    if(userPhone[0].phone.startsWith(phone, 4)== true){
+            for(i=0; i<userPhone.length; i++){
+                newPhone = phone.substring(1,12)
+                if(userPhone[i].phone.startsWith("+91")){
+                    if(userPhone[i].phone.startsWith(newPhone, 4)== true){
                         return res.status(409).send({status:false, message:`${phone} phone number is already in use`})
                     }
                 }
     
-                if(userPhone[0].phone.startsWith(0)){
-                    if(userPhone[0].phone.startsWith(phone, 1)== true){
+                if(userPhone[i].phone.startsWith(0)){
+                    if(userPhone[i].phone.startsWith(newPhone, 1)== true){
                         return res.status(409).send({status:false, message:`${phone} phone number is already in use`})
                     }
                 }
     
-                if(userPhone[0].phone.startsWith(phone, 0)== true){
+                if(userPhone[i].phone.startsWith(newPhone, 0)== true){
                     return res.status(409).send({status:false, message:`${phone} phone number is already in use`})
                 }
             }
+            userData.phone = phone
         }
         
         //incase there is just the phone number without prefix 
         if(phone){
-            if(userPhone.length > 0){
-                if(userPhone[0].phone.startsWith("+91")){
-                    if(userPhone[0].phone.startsWith(phone, 4)== true){
+            for(i=0; i<userPhone.length; i++){
+                if(userPhone[i].phone.startsWith("+91")){
+                    if(userPhone[i].phone.startsWith(phone, 4)== true){
                         return res.status(409).send({status:false, message:`${phone} phone number is already in use`})
                     }
                 }
     
-                if(userPhone[0].phone.startsWith(0)){
-                    if(userPhone[0].phone.startsWith(phone, 1)== true){
+                if(userPhone[i].phone.startsWith(0)){
+                    if(userPhone[i].phone.startsWith(phone, 1)== true){
                         return res.status(409).send({status:false, message:`${phone} phone number is already in use`})
                     }
                 }
     
-                if(userPhone[0].phone.startsWith(phone, 0)== true){
+                if(userPhone[i].phone.startsWith(phone, 0)== true){
                     return res.status(409).send({status:false, message:`${phone} phone number is already in use`})
                 }
             }
+            userData.phone = phone
         }
         
         //Password validation
@@ -175,7 +184,7 @@ const createUser = async function(req, res){
         //Encrypting password
         const encryptPassword  =await bcrypt.hash(password, 10)
         console.log(encryptPassword)
-        req.body.password = encryptPassword
+        userData.password = encryptPassword
 
         //Address validation
 
@@ -241,8 +250,8 @@ const createUser = async function(req, res){
                 .send({status: false, message:"Enter valid Pincode, pincode is required"}) 
         }
 
-        // userData.address = address
-        const user = await userModel.create(req.body)
+        userData.address = address
+        const user = await userModel.create(userData)
         return res  
                 .status(201)
                 .send({status: true, message:"User created successfully", data:user})
