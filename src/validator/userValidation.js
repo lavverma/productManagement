@@ -15,7 +15,7 @@ const isValidString = function (value) {
 }
 
 const isValidName = function(name){
-    return /^[a-zA-Z ,]+.*$/.test(name)
+    return /^[a-z A-Z]+$/.test(name)
 } 
 
 // function for email verification
