@@ -348,11 +348,14 @@ const getUser = async function(req, res){
 const updateUser = async function(req, res){
     try{
         let profileImage = req.files
-        if (!isValidRequest(req.body) && req.files.length == 0) {
+        if(!profileImage){
+        if (!isValidRequest(req.body)) {
             return res
               .status(400)
               .send({ status: false, message: "Please enter valid Input" });
           }
+        }
+        
         //making deep copy of req.body
         const requestBody = JSON.parse(JSON.stringify(req.body));
         let userData = req.user;
