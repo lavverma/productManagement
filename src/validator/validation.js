@@ -61,24 +61,15 @@ const isValidaddress = function(address){
 
 const isValidSize = function(size){
   let existingSize = ["S", "XS","M","X", "L","XXL", "XL"]
-  let count = 0
-  if(size == "string"){
-   size = size.split(',')
-  }
+  size = size.split(',')
   for(i=0; i<size.length; i++){
-    for(j=0; j<existingSize.length; j++){
-      if(existingSize[j] == size[i]){
-        console.log(existing)
-        count++;
+      if(!(existingSize.includes(size[i].trim()))){
+        return false
       }
-    }
   }
-  if(count == size.length){
-    return true
-  }else{
-    return false
-  }
+ return true
 }
+
 
 module.exports = {  isValidRequest,
                     isValidString,

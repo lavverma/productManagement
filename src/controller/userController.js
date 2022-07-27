@@ -347,16 +347,16 @@ const getUser = async function(req, res){
 
 const updateUser = async function(req, res){
     try{
-        if(!isValidRequest(req.body) && req.files.length == 0){
+        let profileImage = req.files
+        if (!isValidRequest(req.body) && req.files.length == 0) {
             return res
-                .status(400)
-                .send({status: false, message:"Enter valid Input"}) 
-        }
+              .status(400)
+              .send({ status: false, message: "Please enter valid Input" });
+          }
         //making deep copy of req.body
         const requestBody = JSON.parse(JSON.stringify(req.body));
         let userData = req.user;
         let {fname, lname, email, phone, password, address} = req.body;
-        let profileImage = req.files
         console.log(req.files)
         
         
@@ -395,8 +395,7 @@ const updateUser = async function(req, res){
         }
 
         //Profile Image validation
-        if(profileImage){
-            if(profileImage.length > 0){
+        if(profileImage.length > 0){
                 console.log(profileImage[0].originalname)
             let match = /\.(jpeg|png|jpg)$/.test(profileImage[0].originalname)
             if(match == false){
@@ -407,12 +406,8 @@ const updateUser = async function(req, res){
                 let uploadedFileURL = await uploadFiles(profileImage[0]) 
                 console.log(uploadedFileURL)
                 userData.profileImage = uploadedFileURL
-            }else {
-                return res
-                    .status(404)
-                    .send({status: false, message:"No file found"})
             }
-        }
+        
             
         
         //Phone number validation

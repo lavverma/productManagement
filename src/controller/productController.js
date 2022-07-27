@@ -5,7 +5,8 @@ const {isValidRequest,
         isValidTitle,
         isValidPrice,
         isValidName,
-        isValidSize} = require('../validator/validation')
+        isValidSize,
+        isValidId} = require('../validator/validation')
 
 
 const createProduct = async function(req, res){
@@ -15,8 +16,8 @@ const createProduct = async function(req, res){
                 .status(400)
                 .send({status:false, message: "Enter valid input"});
         };
-        let requestBody = JSON.parse(JSON.stringify(req.body))
-        let {title, description, price, currencyId, currencyFormat, isFreeShipping, style, availableSizes, installments} = requestBody;
+        // let requestBody = JSON.parse(JSON.stringify(req.body))
+        let {title, description, price, currencyId, currencyFormat, isFreeShipping, style, availableSizes, installments} = req.body;
         let productData ={}
         let productImage = req.files;
 
@@ -121,16 +122,16 @@ const createProduct = async function(req, res){
         }
 
         //validating availabe sizes
-       if(availableSizes){
-            if(!(/^(S|XS|M|X|L|XXL|XL)+$/.test(availableSizes))){
+        if(availableSizes){
+           if(!isValidSize(availableSizes)){
                 return res
-                .status(400)
-                .send({ status: false, message: "Enter valid size" });
-            }else{
-                productData.availableSizes = [availableSizes]
-            }    
+                    .status(400)
+                    .send({ status: false, message: `Enter valid size among ${["S", "XS","M","X", "L","XXL", "XL"].join(' ')}` });
+           }
+           availableSizes = availableSizes.split(',')
+           let sizeArr = availableSizes.map(x => x.trim())
+            productData.availableSizes = sizeArr
         }
-        
 
         //validating installments if given
         if(installments){
@@ -146,7 +147,7 @@ const createProduct = async function(req, res){
         
         return res
             .status(201)
-            .send({ status: false, message: "Success", data:product });
+            .send({ status: true, message: "Success", data:product });
 
     }
     catch(error){
@@ -159,7 +160,53 @@ const createProduct = async function(req, res){
 
 const getProduct = async function(req, res){
     try{
+         let filters  = {isDeleted: false};
+       
+        const allData = await productModel.find(filters)
+           
+         let {size, name, priceGreaterThan, priceLessThan, priceSort} = req.query
+         if(size){
+            if(!isValidSize(size)){
+                return res
+                    .status(400)
+                    .send({ status: false, message: `Enter valid size among ${["S", "XS","M","X", "L","XXL", "XL"].join(' ')}` });
+            }
+            size = size.split(',').map(x=>x.trim())
 
+            console.log(size)
+            filters.availableSizes = {$in:size}
+         }
+
+    if(name){
+        if(!isValidString(name) || !isValidTitle(name)){
+            return res
+                .status(400)
+                .send({ status: false, message: "Enter valid name" });
+            }
+            filters.title = {$regex: name}
+    }
+
+    if(priceGreaterThan && priceLessThan){
+        filters.price = {$gt:priceGreaterThan, $lt:priceLessThan}
+    }else{ 
+    if(priceGreaterThan){
+        priceGreaterThan = parseInt(priceGreaterThan)
+        filters.price = {$gt:priceGreaterThan}
+    }else if(priceLessThan){
+        priceLessThan = parseInt(priceLessThan)
+        filters.price = {$lt:priceLessThan}
+    }}
+    
+        const products = await productModel.find(filters).sort({price:priceSort})
+        if(products.length == 0){
+            return res
+                .status(404)
+                .send({ status: false, message: "No product Found" });
+        }
+        return res
+            .status(200)
+            .send({ status: true, message: "Successful", data: products });
+        
     }
     catch(error){
         console.log(error)
@@ -169,4 +216,34 @@ const getProduct = async function(req, res){
     }
 }
 
-module.exports = {createProduct}
+
+const getProductById = async function(req, res){
+    try{
+        if(!isValidId(req.params.productId)){
+            return res
+                .status(400)
+                .send({status: false, message: "Enter Id in valid objectId format"})
+        }
+
+        let productId = req.params.productId
+        const dataById = await productModel.findOne({_id:productId, isDeleted:false})
+        if(!dataById){
+            return res
+                .status(404)
+                .send({status: false, message: "No product found"})
+        }
+
+        return res
+            .status(200)
+            .send({status: true, message: "Successful", data: dataById})
+    }
+    catch(error){
+        console.log(error)
+        return res
+            .status(500)
+            .send({status: false, message: error.message})
+    }
+} 
+module.exports = {createProduct,
+                  getProduct,
+                    getProductById}
