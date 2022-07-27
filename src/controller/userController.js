@@ -6,7 +6,8 @@ const {isValidRequest,
        isValidPhone,
        isValidPassword,
        isValidPincode,
-       isValidId} = require('../validator/userValidation')
+       isValidId,
+       isValidaddress} = require('../validator/validation')
 const bcrypt = require('bcrypt')
 const jwt = require('jsonwebtoken')
 const {uploadFiles} = require('../upload/upload')
@@ -187,69 +188,55 @@ const createUser = async function(req, res){
         userData.password = encryptPassword
 
         //Address validation
-
-        if(!address){
+        if(typeof address == "string"){
             return res
                 .status(400)
-                .send({status: false, message:"address is required"}) 
+                .send({status: false, message:"Enter Valid address"}) 
         }
-         address = JSON.parse(address);
-        if(!isValidRequest(address)){
-            return res
-                .status(400)
-                .send({status: false, message:"Address should include fields"}) 
-        }
+        console.log(typeof address)
 
         let {shipping, billing} = address;
-
-        // shipping validation
-        if(!shipping || !isValidRequest(shipping)){
-            return res
-                .status(400)
-                .send({status: false, message:"Shipping address is required with fields"}) 
-        }
+        let {street, city, pincode} = shipping
         //Street validation
-        if(!isValidString(shipping.street)){
+        if(!isValidString(street)){
             return res
                 .status(400)
                 .send({status: false, message:"Enter valid Street, street is required in shipping address"}) 
         }
         // //City validation
-        if(!isValidString(shipping.city)){
+        if(!isValidString(city)){
             return res
                 .status(400)
                 .send({status: false, message:"Enter valid City, city is required in shipping addresss"}) 
         }
         //Pincode validation
-        if(!isValidPincode(shipping.pincode)){
-            return res
-                .status(400)
-                .send({status: false, message:"Enter valid Pincode, pincode is required in shipping address"}) 
-        }
+            if(!isValidPincode(pincode)){
+                return res
+                    .status(400)
+                    .send({status: false, message:"Enter valid Pincode, pincode is required in shipping address"}) 
+            }
 
         //Billing Validation
-        if(!billing || !isValidRequest(billing)){
-            return res
-                .status(400)
-                .send({status: false, message:"Billing address is required with fields"}) 
-        }
-        //Street validation
-        if(!isValidString(billing.street)){
-            return res
-                .status(400)
-                .send({status: false, message:"Enter valid Street, street is required in billing address"}) 
-        }
-        //City validation
-        if(!isValidString(billing.city)){
-            return res
-                .status(400)
-                .send({status: false, message:"Enter valid City, city is required in billing address"}) 
-        }
-        //Pincode validation
-        if(!isValidPincode(billing.pincode)){
-            return res
-                .status(400)
-                .send({status: false, message:"Enter valid Pincode, pincode is required in billing address"}) 
+        if(billing){
+            let {street, city, pincode} = billing
+            //Street validation
+            if(!isValidString(street)){
+                return res
+                    .status(400)
+                    .send({status: false, message:"Enter valid Street, street is required in billing address"}) 
+            }
+            //City validation
+            if(!isValidString(city)){
+                return res
+                    .status(400)
+                    .send({status: false, message:"Enter valid City, city is required in billing address"}) 
+            }
+            //Pincode validation
+            if(!isValidPincode(pincode)){
+                return res
+                    .status(400)
+                    .send({status: false, message:"Enter valid Pincode, pincode is required in billing address"}) 
+            }
         }
 
         userData.address = address
@@ -360,19 +347,20 @@ const getUser = async function(req, res){
 
 const updateUser = async function(req, res){
     try{
-        let profileImage = req.files
-        if(!profileImage){
-            if(!isValidRequest(req.body)){
-                return res
-                    .status(400)
-                    .send({status: false, message:"Enter valid Input"}) 
-            }
+        if(!isValidRequest(req.body) && req.files.length == 0){
+            return res
+                .status(400)
+                .send({status: false, message:"Enter valid Input"}) 
         }
+        //making deep copy of req.body
+        const requestBody = JSON.parse(JSON.stringify(req.body));
         let userData = req.user;
         let {fname, lname, email, phone, password, address} = req.body;
+        let profileImage = req.files
+        console.log(req.files)
         
-       
-        if(fname){
+        
+        if(requestBody.hasOwnProperty("fname")){
             if(!isValidString(fname) || !isValidName(fname)){
             return res
                 .status(400)
@@ -381,7 +369,7 @@ const updateUser = async function(req, res){
             userData.fname = fname
         }
 
-        if(lname){
+        if(requestBody.hasOwnProperty("lname")){
             if(!isValidString(lname) || !isValidName(lname)){
                 return res
                     .status(400)
@@ -390,7 +378,7 @@ const updateUser = async function(req, res){
             userData.lname = lname
         }
 
-        if(email){
+        if(requestBody.hasOwnProperty("email")){
             email = email.trim()
             if(!isValidString(email) || !isValidMail(email)){
                 return res
@@ -408,21 +396,27 @@ const updateUser = async function(req, res){
 
         //Profile Image validation
         if(profileImage){
-        if(profileImage.length > 0){
-            console.log(profileImage[0].originalname)
-           let match = /\.(jpeg|png|jpg)$/.test(profileImage[0].originalname)
-           if(match == false){
-            return res
-                .status(400)
-                .send({status: false, message:"Profile Image is required in JPEG/PNG/JPG format"})
-           }
-            let uploadedFileURL = await uploadFiles(profileImage[0]) 
-            console.log(uploadedFileURL)
-            userData.profileImage = uploadedFileURL
+            if(profileImage.length > 0){
+                console.log(profileImage[0].originalname)
+            let match = /\.(jpeg|png|jpg)$/.test(profileImage[0].originalname)
+            if(match == false){
+                return res
+                    .status(400)
+                    .send({status: false, message:"Profile Image is required in JPEG/PNG/JPG format"})
+            }
+                let uploadedFileURL = await uploadFiles(profileImage[0]) 
+                console.log(uploadedFileURL)
+                userData.profileImage = uploadedFileURL
+            }else {
+                return res
+                    .status(404)
+                    .send({status: false, message:"No file found"})
+            }
         }
-        }
+            
+        
         //Phone number validation
-        if(phone){
+        if(requestBody.hasOwnProperty("phone")){
             if(!isValidString(phone) || !isValidPhone(phone)){
                 return res
                     .status(400)
@@ -501,7 +495,7 @@ const updateUser = async function(req, res){
         }
         
         //Password validation
-        if(password){
+        if(requestBody.hasOwnProperty("password")){
             if(!isValidString(password) || !isValidPassword(password)){
                 return res
                     .status(400)
@@ -515,60 +509,66 @@ const updateUser = async function(req, res){
         }
 
         //Address validation
-        if(address){
-            address = JSON.parse(address)
+        if(requestBody.hasOwnProperty("address")){
             let {shipping, billing} = address;
-            if(shipping){
-                if(shipping.street){
-                    if(!isValidString(shipping.street)){
-                    return res
-                        .status(400)
-                        .send({status: false, message:"Enter valid Street in shipping address"}) 
-                    }userData.address.shipping.street = shipping.street
+            address = JSON.parse(JSON.stringify(address))
+
+            if(address.hasOwnProperty("shipping")){
+                let {street, city, pincode} = shipping
+                shipping = JSON.parse(JSON.stringify(shipping))
+
+                if(shipping.hasOwnProperty("street")){
+                    if(!isValidString(street)){
+                        return res
+                            .status(400)
+                            .send({status: false, message:"Enter valid Street in shipping address"}) 
+                    }userData.address.shipping.street = street.trim()
                 }
                 //City validation
-                if(shipping.city){
-                    if(!isValidString(shipping.city)){
+                if(shipping.hasOwnProperty("city")){
+                    if(!isValidString(city)){
                         return res
                             .status(400)
                             .send({status: false, message:"Enter valid City in shipping address"}) 
-                    }userData.address.shipping.city = shipping.city
+                    }userData.address.shipping.city = city.trim()
                 }
                 //Pincode validation
-                if(shipping.pincode){
-                    if(!isValidPincode(shipping.pincode)){
+                if(shipping.hasOwnProperty("pincode")){
+                    if(!isValidPincode(pincode)){
                         return res
                             .status(400)
                             .send({status: false, message:"Enter valid Pincode in shipping address"}) 
-                    }userData.address.shipping.pincode = shipping.pincode
+                    }userData.address.shipping.pincode = pincode.trim()
                 }
             }
 
             //Billing Validation
-            if(billing){
+            if(address.hasOwnProperty("billing")){
+                let {street, city, pincode} = billing
+
                 //Street validation
-                if(billing.street){
-                    if(!isValidString(billing.street)){
+                if(billing.hasOwnProperty("street")){
+                    if(!isValidString(street)){
                         return res
                             .status(400)
                             .send({status: false, message:"Enter valid Street in billing address"}) 
-                    }userData.address.billing.street = billing.street
+                    }userData.address.billing.street = street.trim()
                 }
                 //City validation
-                if(billing.city){
-                    if(!isValidString(billing.city)){
+                if(billing.hasOwnProperty("city")){
+                    if(!isValidString(city)){
                         return res
                             .status(400)
                             .send({status: false, message:"Enter valid City in billing address"}) 
-                    }userData.address.billing.city = billing.city
+                    }userData.address.billing.city = city.trim()
                 }
                 //Pincode validation
-                if(billing.pincode){
-                    if(!isValidPincode(billing.pincode)){
+                if(billing.hasOwnProperty("pincode")){
+                    if(!isValidPincode(pincode)){
                         return res
                             .status(400)
                             .send({status: false, message:"Enter valid Pincode in billing address"}) 
-                    }userData.address.billing.pincode = billing.pincode
+                    }userData.address.billing.pincode = pincode.trim()
                 }
             }
         }

@@ -8,11 +8,14 @@ const isValidRequest = function(data){
     return true
   }
 
-const isValidString = function (value) {
-    if (typeof value == undefined || value == null) return false;
-    if (typeof value == "string" && value.trim().length == 0) return false;
-    else if (typeof value == "string") return true;
-}
+  const isValidString = function (value) {
+    if (!value) return false;
+    if (typeof value === "undefined" || value === null) return false;
+    if (value.length === 0) return false;
+    if (typeof value === "string" && value.trim().length === 0) return false;
+    else if (typeof value === "string") return true;
+  };
+  
 
 const isValidName = function(name){
     return /^[a-z A-Z]+$/.test(name)
@@ -44,6 +47,38 @@ const isValidId = function(id){
     }return true
  }
  
+ const isValidTitle = function(name){
+  return /^([A-Za-z0-9 .!?\:'()$]{2,70})+$/.test(name)
+}
+
+const isValidPrice = function(rating){
+  return  /^([0-9]+\.?[0-9]*)$/.test(rating); 
+};
+
+const isValidaddress = function(address){
+  return /([a-zA-Z0-9 ]*:[a-zA-Z0-9\- :]*)/.test(address)
+}
+
+const isValidSize = function(size){
+  let existingSize = ["S", "XS","M","X", "L","XXL", "XL"]
+  let count = 0
+  if(size == "string"){
+   size = size.split(',')
+  }
+  for(i=0; i<size.length; i++){
+    for(j=0; j<existingSize.length; j++){
+      if(existingSize[j] == size[i]){
+        console.log(existing)
+        count++;
+      }
+    }
+  }
+  if(count == size.length){
+    return true
+  }else{
+    return false
+  }
+}
 
 module.exports = {  isValidRequest,
                     isValidString,
@@ -52,4 +87,9 @@ module.exports = {  isValidRequest,
                     isValidPhone,
                     isValidPassword,
                     isValidPincode,
-                    isValidId}
+                    isValidId,
+                    isValidTitle,
+                    isValidPrice,
+                    isValidaddress,
+                    isValidSize
+                    }
