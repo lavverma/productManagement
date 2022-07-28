@@ -55,10 +55,6 @@ const isValidPrice = function(rating){
   return  /^([0-9]+\.?[0-9]*)$/.test(rating); 
 };
 
-const isValidaddress = function(address){
-  return /([a-zA-Z0-9 ]*:[a-zA-Z0-9\- :]*)/.test(address)
-}
-
 const isValidSize = function(size){
   let existingSize = ["S", "XS","M","X", "L","XXL", "XL"]
   size = size.split(',')
@@ -70,7 +66,18 @@ const isValidSize = function(size){
  return true
 }
 
-
+const isValidValue = function(data){
+  if(!data){
+    return false
+  }
+  if(Object.values(data).length == 0) return false
+  if(Object.values(data).length > 0){
+    const found = Object.values(data).filter((value)=> value);
+    // arr.push(found)
+    if(found.length == 0) return false
+  }
+  return true
+}
 module.exports = {  isValidRequest,
                     isValidString,
                     isValidName,
@@ -81,6 +88,6 @@ module.exports = {  isValidRequest,
                     isValidId,
                     isValidTitle,
                     isValidPrice,
-                    isValidaddress,
-                    isValidSize
+                    isValidSize,
+                    isValidValue
                     }
