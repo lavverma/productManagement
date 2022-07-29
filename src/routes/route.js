@@ -12,6 +12,7 @@ const {
   deleteProduct,
   updateProduct,
 } = require("../controller/productController");
+const { addToCart } = require("../controller/cartController")
 const { authentication, authorization } = require("../middleware/auth");
 const router = express.Router();
 
@@ -28,6 +29,8 @@ router.get("/products/:productId", getProductById);
 router.put("/products/:productId", updateProduct);
 router.delete("/products/:productId", deleteProduct);
 
+//CART API
+router.post("/users/:userId/cart", authentication, authorization, addToCart)
 //Validating the endpoint
 router.all("/*", function (req, res) {
   return res.status(404).send({ status: false, message: "Page Not Found" });

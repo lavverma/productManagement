@@ -3,7 +3,7 @@ const objectId = mongoose.Schema.Types.ObjectId
 
 const cartSchema = new mongoose.Schema({
     userId:{
-        type:objectId,
+        type: objectId,
         ref: 'User',
         required: true,
         unique: true
@@ -14,6 +14,16 @@ const cartSchema = new mongoose.Schema({
                     required: true},
         quantity: {type: Number,
                   required: true,
-                  minLength: 1}
-      }],
-})
+                  min: 1}
+    }],
+    totalPrice:{
+        type:Number,
+        required: true
+    },
+    totalItems:{
+        type:Number,
+        required: true
+    }
+},{timestamps: true})
+
+module.exports = mongoose.model('Cart', cartSchema)

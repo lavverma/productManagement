@@ -306,11 +306,18 @@ const updateProduct = async function (req, res) {
     } = requestBody;
     let newData = {};
     let addToSet = {};
+    
     if (requestBody.hasOwnProperty("title")) {
       if (!isValidString(title) || !isValidTitle(title)) {
         return res
           .status(400)
           .send({ status: false, message: "Enter title in valid format" });
+      }
+      const isDuplicate = await productModel.findOne({title: title})
+      if(isDuplicate){
+        return res
+          .status(409)
+          .send({ status: false, message: `${title} Title already exists` });
       }
       newData["title"] = title;
     }

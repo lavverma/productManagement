@@ -73,7 +73,6 @@ const isValidValue = function(data){
   if(Object.values(data).length == 0) return false
   if(Object.values(data).length > 0){
     const found = Object.values(data).filter((value)=> value);
-    // arr.push(found)
     if(found.length == 0) return false
   }
   return true
