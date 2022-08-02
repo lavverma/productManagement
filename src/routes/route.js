@@ -18,6 +18,7 @@ const {
   getCart,
   deleteCart,
 } = require("../controller/cartController");
+const { createorder, updateOrder } = require("../controller/orderController")
 const { authentication, authorization } = require("../middleware/auth");
 const router = express.Router();
 
@@ -39,6 +40,10 @@ router.post("/users/:userId/cart", authentication, authorization, addToCart);
 router.put("/users/:userId/cart", authentication, authorization, updateCart);
 router.get("/users/:userId/cart", authentication, authorization, getCart);
 router.delete("/users/:userId/cart", authentication, authorization, deleteCart);
+
+//ORDER API
+router.post("/users/:userId/orders", authentication, authorization, createorder);
+router.put("/users/:userId/orders", authentication, authorization, updateOrder)
 
 //Validating the endpoint
 router.all("/*", function (req, res) {

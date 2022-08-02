@@ -11,7 +11,7 @@ const cartSchema = new mongoose.Schema({
     items:[{
         _id: false,
         productId: {type: objectId,
-                    ref: 'Product',
+                    ref: 'Products',
                     required: true},
         quantity: {type: Number,
                   required: true,
