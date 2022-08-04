@@ -16,7 +16,7 @@ const mongoose = require("mongoose");
 
 const createUser = async function (req, res) {
   try {
-    if (!isValidRequest(req.body)) {
+    if (!isValidRequest(req.body)|| req.files.length == 0) {
       return res
         .status(400)
         .send({ status: false, message: "Enter valid Input" });

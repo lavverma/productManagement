@@ -210,15 +210,11 @@ const updateCart  = async function(req, res){
           .status(400)
           .send({ status: false, message: "Product does not exist in the cart" })
       }
-      const cart = await cartModel.findOneAndUpdate({_id: cartId},{$set:cartExist},{new: true})
-      if(cart.totalItems>0){
+      const cart = await cartModel.findOneAndUpdate({_id: cartId},{$set:cartExist},{new: true}).populate({path:'items.productId',select:{_id: 1,title:1, price: 1,productImage:1, description:1}})
+    
         return res
           .status(200)
           .send({ status: true, message: "Success", data: cart })
-      }else{
-        return res
-          .status(204).send({message:"NO CONTENT"})
-      } 
   }
   catch(error){
     return res
@@ -230,7 +226,7 @@ const updateCart  = async function(req, res){
 const getCart =  async function(req, res){
   try{
       let userId = req.user._id
-      const getData = await cartModel.findOne({userId : userId, totalItems:{$gt: 0}})
+      const getData = await cartModel.findOne({userId : userId}).populate({path:'items.productId',select:{_id: 1,title:1, price: 1,productImage:1, description:1}})
       if(!getData){
         return res
           .status(404)
@@ -258,7 +254,7 @@ const deleteCart = async function(req, res){
           .status(400)
           .send({ status: false, message: "No cart found for this user or no product exist in the cart" })
       }
-      return res.status(204).send()
+      return res.status(204).send({message:true, data:delCart})
   }
   catch(error){
     return res

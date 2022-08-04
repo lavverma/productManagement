@@ -187,7 +187,7 @@ const getProduct = async function (req, res) {
   try {
     let filters = { isDeleted: false };
     let { size, name, priceGreaterThan, priceLessThan, priceSort } = req.query;
-    if (size) {
+    if (size != undefined) {
       if (!isValidSize(size)) {
         return res.status(400).send({
           status: false,
@@ -208,7 +208,8 @@ const getProduct = async function (req, res) {
       filters.availableSizes = { $in: size };
     }
 
-    if (name) {
+    if (name != undefined) {
+      name = name.trim()
       if (!isValidString(name) || !isValidTitle(name)) {
         return res
           .status(400)
@@ -217,21 +218,52 @@ const getProduct = async function (req, res) {
       filters.title = { $regex: name };
     }
 
-    if (priceGreaterThan && priceLessThan) {
+    if (priceGreaterThan != undefined && priceLessThan != undefined) {
+      priceGreaterThan = parseInt(priceGreaterThan).trim()
+      priceLessThan = parseInt(priceLessThan).trim()
+      if(isNaN(priceGreaterThan) || isNaN(priceLessThan)){
+        return res.status(400).send({
+          status: false,
+          message: "Enter valid Price range",
+        })
+      }
       filters.price = { $gt: priceGreaterThan, $lt: priceLessThan };
     } else {
-      if (priceGreaterThan) {
+      if (priceGreaterThan != undefined) {
         priceGreaterThan = parseInt(priceGreaterThan);
+        if(isNaN(priceGreaterThan)){
+          return res.status(400).send({
+            status: false,
+            message: "Enter valid greater than pric",
+          })
+        }
         filters.price = { $gt: priceGreaterThan };
-      } else if (priceLessThan) {
+      } else if (priceLessThan != undefined) {
         priceLessThan = parseInt(priceLessThan);
+        if(isNaN(priceLessThan)){
+          return res.status(400).send({
+            status: false,
+            message: "Enter valid less tahn price",
+          })
+        }
         filters.price = { $lt: priceLessThan };
       }
     }
+    if(priceSort != undefined){
+      priceSort = parseInt(priceSort)
+      if (data.priceSort != 1 && data.priceSort != -1)
+        return res.status(400).send({
+          status: false,
+          message:
+            "Enter priceSort = 1 for ascending and priceSort = -1 for descending",
+        });
+    }else priceSort = 1
 
     const products = await productModel
       .find(filters)
-      .sort({ price: priceSort });
+      .sort({ price: priceSort }
+      .select({deletedAt:0}));
+      
     if (products.length == 0) {
       return res
         .status(404)
