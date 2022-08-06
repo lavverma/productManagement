@@ -48,7 +48,7 @@ const isValidId = function(id){
  }
  
  const isValidTitle = function(name){
-  return /^([A-Za-z0-9 .!?\:'()$]{2,70})+$/.test(name)
+  return /^([A-Za-z0-9 -.!?\:'()$]{2,70})+$/.test(name)
 }
 
 const isValidPrice = function(rating){
@@ -57,7 +57,7 @@ const isValidPrice = function(rating){
 
 const isValidSize = function(size){
   let existingSize = ["S", "XS","M","X", "L","XXL", "XL"]
-  size = size.split(',')
+  size = size.split(',').map(x=> x.toUpperCase())
   for(i=0; i<size.length; i++){
       if(!(existingSize.includes(size[i].trim()))){
         return false

@@ -6,26 +6,30 @@ const { isValidId } = require("../validator/validation");
 const authentication = function (req, res, next) {
   try {
     let token = req.headers.authorization;
-    const bearer = token.split(' ')
-    token = bearer[1];
 
     // checking token
     if (!token)
       return res
         .status(401)
         .send({ status: false, message: "token must be present" });
+        
+    const bearer = token.split(' ')
+    token = bearer[1];
 
     // validating the token
-    let decoded = jwt.verify(token, "productManagement/13/dfis") 
-      if (!decoded){
-        return res.status(401).send({ status: false, message: "token is invalid" });
-      }
-      else {
-        // creating an attribute in "req" to access the token outside the middleware
-        req.token = decoded;
-        next();
-      }
-
+    let decoded = jwt.verify(token, "productManagement/13/dfis",function (error, decoded){
+    if (error) {
+      let message =
+        error.message == "jwt expired"
+          ? "token is expired"
+          : "token is invalid";
+      return res.status(401).send({ status: false, message: message });
+    } else {
+      // creating an attribute in "req" to access the token outside the middleware
+      req.token = decoded;
+      next();
+    }
+  })
   } catch (err) {
     return res.status(500).send({ status: false, message: err.message });
   }
@@ -41,17 +45,18 @@ const authorization = async function(req, res, next){
                 .send({status: false, message:"Enter valid format of userId"})
         }
         
-        if(userLoggedIn != userId){
-            return res
-                .status(403)
-                .send({status: false, message:"You are not authorized to perform this task"})
-        }
         const user = await userModel.findOne({_id: userId})
         if(!user){
             return res
                 .status(404)
                 .send({status: false, message:"No such user found"})
         }
+
+        if(userLoggedIn != userId){
+          return res
+              .status(403)
+              .send({status: false, message:"You are not authorized to perform this task"})
+      }
 
          // creating an attribute in "req" to access the blog data outside the middleware
         req.user = user;

@@ -14,9 +14,10 @@ const jwt = require("jsonwebtoken");
 const { uploadFiles } = require("../upload/upload");
 const mongoose = require("mongoose");
 
+//==================================================REGISTETR USER API==================================================
 const createUser = async function (req, res) {
   try {
-    if (!isValidRequest(req.body)|| req.files.length == 0) {
+    if (!isValidRequest(req.body)) {
       return res
         .status(400)
         .send({ status: false, message: "Enter valid Input" });
@@ -24,6 +25,8 @@ const createUser = async function (req, res) {
     let { fname, lname, email, phone, password, address } = req.body;
     let userData = {};
     let profileImage = req.files;
+
+    //Validation of first name
     if (!fname) {
       return res
         .status(400)
@@ -37,6 +40,7 @@ const createUser = async function (req, res) {
     }
     userData.fname = fname;
 
+    //Validation of last name
     if (!lname) {
       return res
         .status(400)
@@ -50,6 +54,7 @@ const createUser = async function (req, res) {
     }
     userData.lname = lname;
 
+    //Validation of email
     if (!email) {
       return res
         .status(400)
@@ -61,6 +66,8 @@ const createUser = async function (req, res) {
         .status(400)
         .send({ status: false, message: "Enter email in proper format" });
     }
+
+    //searching for duplicate email
     const isDuplicateEmail = await userModel.findOne({ email });
     if (isDuplicateEmail) {
       return res
@@ -69,16 +76,16 @@ const createUser = async function (req, res) {
     }
     userData.email = email;
 
-    //Profile Image validation
+    //Validation of Profile Image
     if (profileImage.length > 0) {
       console.log(profileImage[0].originalname);
-      let match = /\.(jpeg|png|jpg)$/.test(profileImage[0].originalname);
+      let match = /\.(jpg|jpeg|jfif|pjpeg|pjp|webp|png)$/.test(profileImage[0].originalname);
       if (match == false) {
         return res
           .status(400)
           .send({
             status: false,
-            message: "Profile Image is required in JPEG/PNG/JPG format",
+            message: "Profile Image is required in JPEG/PNG/JPG/JFIF/PJPEG/PJP/WEBP format",
           });
       }
       let uploadedFileURL = await uploadFiles(profileImage[0]);
@@ -87,10 +94,10 @@ const createUser = async function (req, res) {
     } else {
       return res
         .status(400)
-        .send({ status: false, message: "Profile Image is required" });
+        .send({ status: false, message: "Valid Profile Image is required" });
     }
 
-    //Phone number validation
+    //Validation of Phone number
     if (!phone) {
       return res
         .status(400)
@@ -217,7 +224,7 @@ const createUser = async function (req, res) {
       userData.phone = phone;
     }
 
-    //Password validation
+    //Validation of Password 
     if (!password) {
       return res
         .status(400)
@@ -247,37 +254,41 @@ const createUser = async function (req, res) {
     console.log(typeof address);
 
     let { shipping, billing } = address;
-    let { street, city, pincode } = shipping;
-    //Street validation
-    if (!isValidString(street)) {
-      return res
-        .status(400)
-        .send({
-          status: false,
-          message: "Enter valid Street, street is required in shipping address",
-        });
-    }
-    // //City validation
-    if (!isValidString(city)) {
-      return res
-        .status(400)
-        .send({
-          status: false,
-          message: "Enter valid City, city is required in shipping addresss",
-        });
-    }
-    //Pincode validation
-    if (!isValidPincode(pincode)) {
-      return res
-        .status(400)
-        .send({
-          status: false,
-          message:
-            "Enter valid Pincode, pincode is required in shipping address",
-        });
+
+    //Shipping address validation
+    if(shipping){
+      let { street, city, pincode } = shipping;
+      //Street validation
+      if (!isValidString(street)) {
+        return res
+          .status(400)
+          .send({
+            status: false,
+            message: "Enter valid Street, street is required in shipping address",
+          });
+      }
+      //City validation
+      if (!isValidString(city)) {
+        return res
+          .status(400)
+          .send({
+            status: false,
+            message: "Enter valid City, city is required in shipping addresss",
+          });
+      }
+      //Pincode validation
+      if (!isValidPincode(pincode)) {
+        return res
+          .status(400)
+          .send({
+            status: false,
+            message:
+              "Enter valid Pincode, pincode is required in shipping address",
+          });
+      }
     }
 
-    //Billing Validation
+    //Billing address Validation
     if (billing) {
       let { street, city, pincode } = billing;
       //Street validation
@@ -322,6 +333,7 @@ const createUser = async function (req, res) {
   }
 };
 
+//==================================================LOGIN USER API==================================================
 const loginUser = async function (req, res) {
   try {
     if (!isValidRequest(req.body)) {
@@ -359,14 +371,14 @@ const loginUser = async function (req, res) {
     });
 
     if (!user)
-      return res.status(400).send({
+      return res.status(404).send({
         status: false,
-        message: "Email does not exist",
+        message: "User Not Found",
       });
     const match = await bcrypt.compare(password, user.password);
     if (!match) {
       return res
-        .status(400)
+        .status(406)
         .send({ status: false, message: "Entered Passwrod is incorrect" });
     }
 
@@ -383,7 +395,7 @@ const loginUser = async function (req, res) {
       .status(200)
       .send({
         status: true,
-        message: "User login successfull",
+        message: "User login successful",
         data: { userId: user._id, token: token },
       });
   } catch (error) {
@@ -392,6 +404,7 @@ const loginUser = async function (req, res) {
   }
 };
 
+//==================================================GET USER PROFILE==================================================
 const getUser = async function (req, res) {
   try {
     const userFound = await userModel.findOne({ _id: req.user._id });
@@ -407,6 +420,7 @@ const getUser = async function (req, res) {
   }
 };
 
+//==================================================UPDATE USER PROFILE================================================== 
 const updateUser = async function (req, res) {
   try {
 
@@ -422,9 +436,10 @@ const updateUser = async function (req, res) {
           .send({ status: false, message: "Enter valid Input" });
       }
     let userData = req.user;
-    let { fname, lname, email, phone, password, address } = requestBody;
+    let { fname, lname, email, phone, password, address,files } = requestBody;
     console.log(req.files);
-
+    
+    //Validation of first name if present
     if (requestBody.hasOwnProperty("fname")) {
       if (!isValidString(fname) || !isValidName(fname)) {
         return res
@@ -437,6 +452,7 @@ const updateUser = async function (req, res) {
       userData.fname = fname;
     }
 
+    //Validation of last name if present
     if (requestBody.hasOwnProperty("lname")) {
       if (!isValidString(lname) || !isValidName(lname)) {
         return res
@@ -446,6 +462,7 @@ const updateUser = async function (req, res) {
       userData.lname = lname;
     }
 
+    //Validation of email if present
     if (requestBody.hasOwnProperty("email")) {
       email = email.trim();
       if (!isValidString(email) || !isValidMail(email)) {
@@ -453,6 +470,8 @@ const updateUser = async function (req, res) {
           .status(400)
           .send({ status: false, message: "Enter email in proper format" });
       }
+
+      //Searching for duplicate email
       const isDuplicateEmail = await userModel.findOne({ email });
       if (isDuplicateEmail) {
         return res
@@ -462,16 +481,16 @@ const updateUser = async function (req, res) {
       userData.email = email;
     }
 
-    //Profile Image validation
+    //Profile Image validation if present
     if (profileImage.length > 0) {
       console.log(profileImage[0].originalname);
-      let match = /\.(jpeg|png|jpg)$/.test(profileImage[0].originalname);
+      let match = /\.(jpg|jpeg|jfif|pjpeg|pjp|webp|png)$/.test(profileImage[0].originalname);
       if (match == false) {
         return res
           .status(400)
           .send({
             status: false,
-            message: "Profile Image is required in JPEG/PNG/JPG format",
+            message: "Profile Image is required in JPEG/PNG/JPG/JFIF/PJPEG/PJP/WEBP format",
           });
       }
       let uploadedFileURL = await uploadFiles(profileImage[0]);
@@ -479,7 +498,8 @@ const updateUser = async function (req, res) {
       userData.profileImage = uploadedFileURL;
     }
 
-    //Phone number validation
+
+    //Phone number validation if present
     if (requestBody.hasOwnProperty("phone")) {
       if (!isValidString(phone) || !isValidPhone(phone)) {
         return res
@@ -603,7 +623,7 @@ const updateUser = async function (req, res) {
       }
     }
 
-    //Password validation
+    //Password validation if present
     if (requestBody.hasOwnProperty("password")) {
       if (!isValidString(password) || !isValidPassword(password)) {
         return res
@@ -621,7 +641,7 @@ const updateUser = async function (req, res) {
       userData.password = encryptPassword;
     }
 
-    //Address validation
+    //Address validation if present
     if (requestBody.hasOwnProperty("address")) {
       let { shipping, billing } = address;
       address = JSON.parse(JSON.stringify(address));

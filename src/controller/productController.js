@@ -11,6 +11,7 @@ const {
   isValidValue,
 } = require("../validator/validation");
 
+//==================================================CREATE PRODUCT==================================================
 const createProduct = async function (req, res) {
   try {
     if (!isValidRequest(req.body)) {
@@ -18,7 +19,6 @@ const createProduct = async function (req, res) {
         .status(400)
         .send({ status: false, message: "Enter valid input" });
     }
-    // let requestBody = JSON.parse(JSON.stringify(req.body))
     let {
       title,
       description,
@@ -83,7 +83,7 @@ const createProduct = async function (req, res) {
       if (!["INR"].includes(currencyId)) {
         return res.status(400).send({
           status: false,
-          message: "Enter valid currency abbreviation either of Indian rupee",
+          message: "Enter valid currency abbreviation of Indian rupee",
         });
       }
       productData.currencyId = currencyId;
@@ -117,7 +117,7 @@ const createProduct = async function (req, res) {
         .status(400)
         .send({ status: false, message: "Product Image is required" });
     }
-    let match = /\.(jpeg|png|jpg)$/.test(productImage[0].originalname);
+    let match = /\.(jpg|jpeg|jfif|pjpeg|pjp|webp|png)$/.test(productImage[0].originalname);
     if (match == false) {
       return res.status(400).send({
         status: false,
@@ -159,6 +159,7 @@ const createProduct = async function (req, res) {
       }
       availableSizes = availableSizes.split(",");
       let sizeArr = availableSizes.map((x) => x.trim());
+      sizeArr = sizeArr.map(x=>x.toUpperCase())
       productData.availableSizes = sizeArr;
 
     //validating installments if given
@@ -183,6 +184,7 @@ const createProduct = async function (req, res) {
   }
 };
 
+//==================================================GET PRODUCT==================================================
 const getProduct = async function (req, res) {
   try {
     let filters = { isDeleted: false };
@@ -219,8 +221,9 @@ const getProduct = async function (req, res) {
     }
 
     if (priceGreaterThan != undefined && priceLessThan != undefined) {
-      priceGreaterThan = parseInt(priceGreaterThan).trim()
-      priceLessThan = parseInt(priceLessThan).trim()
+      priceGreaterThan = parseInt(priceGreaterThan.trim())
+      priceLessThan = parseInt(priceLessThan.trim())
+      console.log(priceGreaterThan)
       if(isNaN(priceGreaterThan) || isNaN(priceLessThan)){
         return res.status(400).send({
           status: false,
@@ -230,28 +233,28 @@ const getProduct = async function (req, res) {
       filters.price = { $gt: priceGreaterThan, $lt: priceLessThan };
     } else {
       if (priceGreaterThan != undefined) {
-        priceGreaterThan = parseInt(priceGreaterThan);
+        priceGreaterThan = parseInt(priceGreaterThan.trim());
         if(isNaN(priceGreaterThan)){
           return res.status(400).send({
             status: false,
-            message: "Enter valid greater than pric",
+            message: "Enter valid greater than price",
           })
         }
         filters.price = { $gt: priceGreaterThan };
       } else if (priceLessThan != undefined) {
-        priceLessThan = parseInt(priceLessThan);
+        priceLessThan = parseInt(priceLessThan.trim());
         if(isNaN(priceLessThan)){
           return res.status(400).send({
             status: false,
-            message: "Enter valid less tahn price",
+            message: "Enter valid less than price",
           })
         }
         filters.price = { $lt: priceLessThan };
       }
     }
     if(priceSort != undefined){
-      priceSort = parseInt(priceSort)
-      if (data.priceSort != 1 && data.priceSort != -1)
+      priceSort = parseInt(priceSort.trim())
+      if (priceSort != 1 && priceSort != -1)
         return res.status(400).send({
           status: false,
           message:
@@ -261,8 +264,8 @@ const getProduct = async function (req, res) {
 
     const products = await productModel
       .find(filters)
-      .sort({ price: priceSort }
-      .select({deletedAt:0}));
+      .sort({ price: priceSort })
+      .select({deletedAt:0});
       
     if (products.length == 0) {
       return res
@@ -340,6 +343,7 @@ const updateProduct = async function (req, res) {
     let addToSet = {};
     
     if (requestBody.hasOwnProperty("title")) {
+      title = title.trim()
       if (!isValidString(title) || !isValidTitle(title)) {
         return res
           .status(400)
@@ -412,7 +416,7 @@ const updateProduct = async function (req, res) {
           }
     }
     if (productImage.length > 0) {
-        let match = /\.(jpeg|png|jpg)$/.test(productImage[0].originalname);
+        let match = /\.(jpg|jpeg|jfif|pjpeg|pjp|webp|png)$/.test(productImage[0].originalname);
         if (match == false) {
           return res
             .status(400)
