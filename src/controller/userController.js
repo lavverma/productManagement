@@ -378,7 +378,7 @@ const loginUser = async function (req, res) {
     const match = await bcrypt.compare(password, user.password);
     if (!match) {
       return res
-        .status(406)
+        .status(400)
         .send({ status: false, message: "Entered Passwrod is incorrect" });
     }
 

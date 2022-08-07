@@ -29,8 +29,13 @@ const createorder = async function(req, res){
         }
 
         //Searching for cart before placing the order
-        const cartExist = await cartModel.findOne({_id: cartId, totalItems:{$gt:0}}).select({_id:0,__v:0})
+        const cartExist = await cartModel.findOne({_id: cartId}).select({_id:0,__v:0})
         if(!cartExist){
+            return res
+                .status(404)
+                .send({status: false, message:"Cart not found"})
+        }
+        if(cartExist.totalItems == 0){
             return res
                 .status(400)
                 .send({status: false, message:"No product exist in the cart to place an order"})
@@ -89,6 +94,12 @@ const updateOrder = async function(req, res){
         let {orderId, status} = req.body
         let set = ["completed", "cancelled"]
 
+        let cart = await cartModel.findOne({userId: userId})
+        if(!cart){
+            return res
+                .status(404)
+                .send({status: false, message:"Cart dosen't exist for this user"})
+        }
         //Validation of orderId
         if(!orderId){
             return res
@@ -103,6 +114,11 @@ const updateOrder = async function(req, res){
 
         //Searching for an existing order
         const orderPlaced = await orderModel.findOne({_id: orderId})
+        if(!orderPlaced){
+            return res
+            .status(404)
+            .send({status: false, message:`Order not found`})
+        }
         if(orderPlaced.userId.toString() != userId){
             return res
                 .status(400)
@@ -122,12 +138,17 @@ const updateOrder = async function(req, res){
         }
 
         //checking if the order data already have the order cancelled
-        if(orderPlaced.status === "cancelled"){
+        if(orderPlaced.status == set[1]){
             return res
                     .status(400)
                     .send({status: false, message:"This order has already been cancelled"})
         }
-
+        if(orderPlaced.status == set[0]){
+            return res
+                .status(400)
+                .send({status: false, message:"Order had already been completed"})
+        }
+        
         //Checking if the order data have cancellable true or false and changing status accordingly
         if(status == set[1]){
             if(orderPlaced.cancellable.toString() != "true"){
@@ -135,21 +156,13 @@ const updateOrder = async function(req, res){
                     .status(400)
                     .send({status: false, message:"This order is not cancellable"})
             }
-            if(orderPlaced.status === "completed"){
-                return res
-                    .status(400)
-                    .send({status: false, message:"This order has been delivered"})
-            }
+            
         }
-        if(orderPlaced.status == set[0]){
-            return res
-                .status(400)
-                .send({status: false, message:"Order had already been completed"})
-        }
+        
         const updatedStatus  = await orderModel.findByIdAndUpdate(orderId,{$set:{status: status}},{new: true})
         return res
                 .status(200)
-                .send({status: true, message:"Status Updated", data: updatedStatus})
+                .send({status: true, message:"Status Updated Successfully", data: updatedStatus})
     }
     catch(error){
         console.log(error)

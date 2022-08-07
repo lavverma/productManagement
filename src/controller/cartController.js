@@ -195,7 +195,7 @@ const updateCart  = async function(req, res){
     if(removeProduct == undefined){
       return res
         .status(400)
-        .send({ status: false, message: "Remove product id required to remove the product or decrease the quantity of product" })
+        .send({ status: false, message: "Removeproduct key is required to remove the product or decrease the quantity of product" })
     }
     if(!([1,0].includes(removeProduct))){
       return res
@@ -288,7 +288,7 @@ const deleteCart = async function(req, res){
           .status(400)
           .send({ status: false, message: "No cart found for this user or no product exist in the cart" })
       }
-      return res.status(204).send({message:true, data:delCart})
+      return res.status(204).send({status: true, message:"Successfully Deleted", data:delCart})
   }
   catch(error){
     return res

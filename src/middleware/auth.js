@@ -12,18 +12,16 @@ const authentication = function (req, res, next) {
       return res
         .status(401)
         .send({ status: false, message: "token must be present" });
-        
+
     const bearer = token.split(' ')
     token = bearer[1];
 
     // validating the token
     let decoded = jwt.verify(token, "productManagement/13/dfis",function (error, decoded){
     if (error) {
-      let message =
-        error.message == "jwt expired"
-          ? "token is expired"
-          : "token is invalid";
-      return res.status(401).send({ status: false, message: message });
+      return res
+        .status(401)
+        .send({ status: false, message: error.message });
     } else {
       // creating an attribute in "req" to access the token outside the middleware
       req.token = decoded;

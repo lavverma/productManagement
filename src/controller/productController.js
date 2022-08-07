@@ -39,6 +39,7 @@ const createProduct = async function (req, res) {
         .status(400)
         .send({ status: false, message: "Title is required" });
     }
+
     if (!isValidString(title) || !isValidTitle(title)) {
       return res
         .status(400)
