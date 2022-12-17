@@ -1,3 +1,4 @@
+require("dotenv").config()
 const express = require("express");
 var bodyParser = require("body-parser");
 const mongoose  = require("mongoose");
@@ -13,7 +14,7 @@ app.use(multer().any())
 // mongoDb connection
 mongoose
   .connect(
-    "mongodb+srv://Manasvi29:bharat2909@cluster0.r7a9dpa.mongodb.net/group13Database?retryWrites=true&w=majority",
+    process.env.DATA_BASE,
     {
       useNewUrlParser: true,
     }
@@ -25,6 +26,6 @@ mongoose
 app.use("/", route);
 
 // port
-app.listen(process.env.PORT || 3000, function () {
-  console.log("Express app running on port " + (process.env.PORT || 3000));
+app.listen(process.env.PORT, function () {
+  console.log("Express app running on port " + (process.env.PORT ));
 });

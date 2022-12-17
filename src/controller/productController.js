@@ -33,7 +33,7 @@ const createProduct = async function (req, res) {
     let productData = {};
     let productImage = req.files;
 
-    //validationg product title
+    //validations product title
     if (!title) {
       return res
         .status(400)
@@ -281,6 +281,8 @@ const getProduct = async function (req, res) {
     return res.status(500).send({ status: false, message: error.message });
   }
 };
+
+
 
 const getProductById = async function (req, res) {
   try {

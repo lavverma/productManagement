@@ -17,7 +17,7 @@ const authentication = function (req, res, next) {
     token = bearer[1];
 
     // validating the token
-    let decoded = jwt.verify(token, "productManagement/13/dfis",function (error, decoded){
+     jwt.verify(token, process.env.JWT_SECRET_KEY,function (error, decoded){
     if (error) {
       return res
         .status(401)
